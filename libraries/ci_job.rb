@@ -84,6 +84,12 @@ class Chef
   class Provider::CiJob < Provider
     include Poise
     include Ci::SshHelper::Provider
+    attr_accessor :labels
+
+    def initialize(*args)
+      super
+      @@labels ||= {}
+    end
 
     def action_enable
       if new_resource.is_server
@@ -150,10 +156,14 @@ class Chef
     end
 
     def create_node
+      @@labels[node.name] ||= []
+      @@labels[node.name] += [new_resource.builder_label] if new_resource.builder_label
+      @@labels[node.name].uniq!
+
       jenkins_node node.name do
         parent new_resource.parent
         path new_resource.path
-        labels [new_resource.builder_label] if new_resource.builder_label
+        labels @@labels[node.name]
         server_url new_resource.server_url
         server_username new_resource.server_username
         server_password new_resource.server_api_key
