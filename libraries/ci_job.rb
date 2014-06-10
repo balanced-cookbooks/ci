@@ -84,12 +84,6 @@ class Chef
   class Provider::CiJob < Provider
     include Poise
     include Ci::SshHelper::Provider
-    attr_accessor :labels
-
-    def initialize(*args)
-      super
-      @@labels ||= {}
-    end
 
     def action_enable
       if new_resource.is_server
