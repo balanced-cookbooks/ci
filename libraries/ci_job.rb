@@ -156,14 +156,19 @@ class Chef
     end
 
     def create_node
-      @@labels[node.name] ||= []
-      @@labels[node.name] += [new_resource.builder_label] if new_resource.builder_label
-      @@labels[node.name].uniq!
+
+      # the chef attribute array does not support many of the operators we want
+      # to use so we duplicate it, operate on it and then write it back to the
+      # node.
+      intermediate = (node['ci']['builder_labels'] || []).dup
+      intermediate << new_resource.builder_label if new_resource.builder_label
+      intermediate.uniq!
+      node.default['ci']['builder_labels'] = intermediate
 
       jenkins_node node.name do
         parent new_resource.parent
         path new_resource.path
-        labels @@labels[node.name]
+        labels node['ci']['builder_labels']
         server_url new_resource.server_url
         server_username new_resource.server_username
         server_password new_resource.server_api_key
